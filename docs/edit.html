@@ -30,13 +30,13 @@
             <span># boxes</span>
             <input onchange="fdel.doChange();" name="quantity" type="number" value="1" min="1" max="25"/>
           </label>
-          <label class="field field-address required" onblur="fdel.doChange()">
+          <label class="field field-address required">
             <span>Address</span>
             <input onchange="fdel.doChange();" name="address" placeholder="Street address" required="required"/>
           </label>
           <label class="field field-notes">
             <span>Notes</span>
-            <input name="notes" placeholder="Delivery notes"/>
+            <input onchange="fdel.doChange();" name="notes" placeholder="Delivery notes"/>
           </label>
           <button class="delete-row" type="button" onclick="fdel.removeRow(this);">X</button>
         </fieldset>

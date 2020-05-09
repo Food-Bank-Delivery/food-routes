@@ -197,28 +197,33 @@ fdel.displayRoute = function () {
     }
     
     fdel.data.entries.forEach((entry, i) => {
-        var itemNode = document.createElement("li");
-        var child;
+        var rowNode = document.createElement("tr");
+        var cellNode;
 
         if (entry.address) {
-            child = document.createElement("p");
-            child.setAttribute("class", "address");
-            child.textContent = entry.address;
-            itemNode.appendChild(child);
-
-            child = document.createElement("p");
-            child.setAttribute("class", "quantity");
-            child.textContent = "Deliver " + entry.quantity + " box(es)";
-            itemNode.appendChild(child);
-
-            if (entry.notes) {
-                child = document.createElement("p");
-                child.setAttribute("class", "notes");
-                child.textContent = entry.notes;
-                itemNode.appendChild(child);
-            }
+            cellNode = document.createElement("th");
+            cellNode.className = "num";
+            cellNode.textContent = "" + (i + 1)
+            rowNode.appendChild(cellNode);
             
-            fdel.routeNode.appendChild(itemNode);
+            cellNode = document.createElement("td");
+            cellNode.textContent = entry.address;
+            rowNode.appendChild(cellNode);
+
+            cellNode = document.createElement("td");
+            cellNode.className = "quantity";
+            cellNode.textContent = "" + entry.quantity;
+            rowNode.appendChild(cellNode);
+
+            cellNode = document.createElement("td");
+            cellNode.setAttribute("class", "notes");
+            cellNode.textContent = entry.notes;
+            rowNode.appendChild(cellNode);
+
+            cellNode = document.createElement("td");
+            rowNode.appendChild(cellNode);
+            
+            fdel.routeNode.appendChild(rowNode);
         }
     });
 };
