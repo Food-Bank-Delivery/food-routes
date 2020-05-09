@@ -3,11 +3,14 @@
  */
 fdel = {
     formNode: undefined,
+    linkNode: undefined,
     map: undefined,
     markerLayer: undefined,
     rowTemplate: undefined,
     geoCache: {},
-    data: []
+    data: {
+        entries: []
+    }
 };
 
 
@@ -16,6 +19,7 @@ fdel = {
  */
 fdel.setupMap = function () {
     fdel.map = L.map('map-node').setView([45.42, -75.69], 13);
+    L.control.scale().addTo(fdel.map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
@@ -37,6 +41,7 @@ fdel.geocode = function (address, func, err) {
     if (address in fdel.geoCache) {
         var a = fdel.geoCache[address];
         func(a[0], a[1]);
+        return;
     }
     
     var query = "https://nominatim.openstreetmap.org/search?format=json&country=Canada&city=Ottawa&street=" + encodeURIComponent(address);
@@ -45,8 +50,9 @@ fdel.geocode = function (address, func, err) {
         func = console.log;
     }
     if (!err) {
-        err = alert;
+        err = console.error;
     }
+
     request.onreadystatechange = function () {
         if (request.readyState == XMLHttpRequest.DONE) {
             var geodata = JSON.parse(request.responseText);
@@ -57,7 +63,7 @@ fdel.geocode = function (address, func, err) {
                 func(latlon, fullAddress);
             } else {
                 fdel.geoCache[address] = false;
-                err("Cannot find address.\n\n" + address);
+                func(false, false);
             }
         }
     };
@@ -84,7 +90,7 @@ fdel.scanRow = function (node) {
 
 
 /**
- * Scan whole form and update fdel.data
+ * Scan whole form and update fdel.data.entries
  */
 fdel.rescanData = function () {
     var rows = fdel.formNode.getElementsByTagName("fieldset");
@@ -92,7 +98,7 @@ fdel.rescanData = function () {
     for (var i = 0; i < rows.length; i++) {
         data.push(fdel.scanRow(rows[i]));
     }
-    fdel.data = data;
+    fdel.data.entries = data;
 };
 
 
@@ -100,26 +106,37 @@ fdel.rescanData = function () {
  * Redraw the map with all current addresses.
  */
 fdel.updateMap = function () {
+
     fdel.markerLayer.clearLayers();
-    fdel.data.forEach(function (delivery) {
-        if (delivery.address) {
-            fdel.geocode(delivery.address, function (latlon, fullAddress) {
-                var marker = L.marker(latlon, { title: fullAddress });
-                marker.addTo(fdel.markerLayer);
-            });
+
+    var counter = 0;
+    fdel.data.entries.forEach((entry, i) => {
+        if (entry.address) {
+            var add = () => {
+                fdel.geocode(entry.address, (latlon, fullAddress) => {
+                    if (latlon === false) {
+                        alert("Cannot find address " + entry.address);
+                    } else {
+                        var marker = L.marker(latlon, { title: fullAddress });
+                        marker.addTo(fdel.markerLayer);
+                        fdel.map.fitBounds(fdel.markerLayer.getBounds());
+                    }
+                });
+            };
+
+            setTimeout(add, 1100);
         }
     });
-    fdel.map.fitBounds(fdel.markerLayer.getBounds());
 };
 
 
 /**
- * Rebuild the form from fdel.data (e.g. after a reload)
+ * Rebuild the form from fdel.data.entries (e.g. after a reload)
  */
 fdel.rebuildForm = function () {
     fdel.formNode.innerHTML = "";
-    for (var i = 0; i < fdel.data.length; i++) {
-        var entry = fdel.data[i];
+    for (var i = 0; i < fdel.data.entries.length; i++) {
+        var entry = fdel.data.entries[i];
         var row = fdel.rowTemplate.cloneNode(true);
         var fields = row.getElementsByTagName("input");
         for (var j = 0; j < fields.length; j++) {
@@ -139,14 +156,13 @@ fdel.addRow = function () {
     for (var i = 0; i < fields.length; i++) {
         if (fields[i].type == "number") {
             fields[i].value = "1";
-            fields[i].onchange = fdel.doChange;
+            fields[i].addEventListener("change", fdel.doChange);
         } else {
             fields[i].value = "";
-            fields[i].onblur = fdel.doChange;
+            fields[i].addEventListener("change", fdel.doChange);
         }
     }
     fdel.formNode.appendChild(row);
-    fdel.doChange();
 };
 
 
@@ -168,8 +184,8 @@ fdel.removeRow = function (node) {
  */
 fdel.doChange = function (node) {
     fdel.rescanData();
-    if (fdel.data.length == 0) {
-        fdel.data = [{
+    if (fdel.data.entries.length == 0) {
+        fdel.data.entries = [{
             quantity: 1,
             address: "",
             notes: ""
@@ -179,6 +195,8 @@ fdel.doChange = function (node) {
         fdel.updateMap();
     }
     window.location.hash = JSON.stringify(fdel.data);
+    fdel.linkNode.setAttribute("href", window.location.hash);
+    return true;
 };
 
 
@@ -187,14 +205,18 @@ fdel.doChange = function (node) {
  */
 window.onload = function () {
     fdel.formNode = document.getElementById("deliveries");
+    fdel.formNode.addEventListener("submit", fdel.doChange);
+
+    fdel.linkNode = document.getElementById("share");
+    fdel.linkNode.setAttribute("href", window.location.hash);
 
     // Add change handler to all form inputs
     var fields = fdel.formNode.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
         if (fields[i].type == "number") {
-            fields[i].onchange = fdel.doChange;
+            fields[i].addEventListener("change", fdel.doChange);
         } else {
-            fields[i].onblur = fdel.doChange;
+            fields[i].addEventListener("change", fdel.doChange);
         }
     }
 
