@@ -49,3 +49,30 @@ fieldset {
     height: 480px;
     width: 640px;
 }
+
+#route-node .address {
+    font-weight: bold;
+}
+
+#route-node .notes:before {
+    content: "Notes: ";
+    font-weight: bold;
+}
+
+#route-node .notes {
+    font-style: italic;
+    font-size: smaller;
+    color: #888888;
+}
+
+.leaflet-div-icon {
+background: transparent;
+border: none;
+}
+.leaflet-marker-icon .number{
+position: relative;
+top: -37px;
+font-size: 12px;
+width: 25px;
+text-align: center;
+}

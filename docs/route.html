@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Route</title>
+    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
+    <link rel="stylesheet" href="js/leaflet.numberMarkers/leaflet_awesome_number_markers.css"/>    
+    <link rel="icon" href="icon.png"/>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="script.js"></script>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+            crossorigin=""></script>    
+    <script src="js/leaflet.numberMarkers/leaflet_awesome_number_markers.js"></script>
+  </head>
+  <body>
+    <h1>Route</h1>
+    <section id="route">
+      <ol id="route-node">
+      </ol>
+    </section>
+    <section id="map">
+      <div id="map-node"/>
+    </section>
+    <script defer="defer">
+      window.onload = fdel.setupRoute;
+    </script>
+  </body>
+</html>
