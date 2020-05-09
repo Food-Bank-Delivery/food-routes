@@ -2,34 +2,75 @@
  * Top level namespace
  */
 fdel = {
-    form_node: undefined,
+    formNode: undefined,
     rowTemplate: undefined,
+    geoCache: {},
     data: []
 };
 
+
 /**
- * Scan the form and create a JSON data structure.
+ * Geocode an address for mapping (assumes Ottawa).
+ * Call func with the lat, lon on success
+ */
+fdel.geocode = function (address, func, err) {
+    var query = "https://nominatim.openstreetmap.org/search?format=json&country=Canada&city=Ottawa&street=" + encodeURIComponent(address);
+    var request = new XMLHttpRequest();
+    if (!func) {
+        func = console.log;
+    }
+    if (!err) {
+        err = alert;
+    }
+    request.onreadystatechange = function () {
+        if (request.readyState == XMLHttpRequest.DONE) {
+            var geodata = JSON.parse(request.responseText);
+            if (geodata.length > 0) {
+                func(geodata[0].lat, geodata[0].lon);
+            } else {
+                err("Cannot find address.\n\n" + address);
+            }
+        }
+    };
+    request.onerror = function () {
+        err("API error in Nominatim geocoder.\n\n" + address);
+    };
+    request.open("GET", query);
+    request.send();
+};
+
+
+/**
+ * Scan a single fieldset (data row)
+ */
+fdel.scanRow = function (node) {
+    var entry = {};
+    var fields = node.getElementsByTagName("input");
+    for (var i = 0; i < fields.length; i++) {
+        entry[fields[i].name] = fields[i].value;
+    }
+    return entry;
+};
+
+
+/**
+ * Scan whole form and update fdel.data
  */
 fdel.rescanData = function () {
-    var rows = fdel.form_node.getElementsByTagName("fieldset");
+    var rows = fdel.formNode.getElementsByTagName("fieldset");
     var data = [];
     for (var i = 0; i < rows.length; i++) {
-        var entry = {};
-        var fields = rows[i].getElementsByTagName("input");
-        for (var j = 0; j < fields.length; j++) {
-            entry[fields[j].name] = fields[j].value;
-        }
-        data.push(entry);
+        data.push(fdel.scanRow(rows[i]));
     }
     fdel.data = data;
 };
 
 
 /**
- * Rebuild the form from the saved data
+ * Rebuild the form from fdel.data (e.g. after a reload)
  */
 fdel.rebuildForm = function () {
-    fdel.form_node.innerHTML = "";
+    fdel.formNode.innerHTML = "";
     for (var i = 0; i < fdel.data.length; i++) {
         var entry = fdel.data[i];
         var row = fdel.rowTemplate.cloneNode(true);
@@ -37,7 +78,7 @@ fdel.rebuildForm = function () {
         for (var j = 0; j < fields.length; j++) {
             fields[j].value = entry[fields[j].name];
         }
-        fdel.form_node.appendChild(row);
+        fdel.formNode.appendChild(row);
     }
 };
 
@@ -57,7 +98,7 @@ fdel.addRow = function () {
             fields[i].onblur = fdel.doChange;
         }
     }
-    fdel.form_node.appendChild(row);
+    fdel.formNode.appendChild(row);
     fdel.doChange();
 };
 
@@ -66,9 +107,10 @@ fdel.addRow = function () {
  * Remove a delivery row from the form
  */
 fdel.removeRow = function (node) {
-    if (confirm("Delete delivery?")) {
-        var row = node.closest("fieldset");
-        fdel.form_node.removeChild(row);
+    var row = node.closest("fieldset");
+    var data = fdel.scanRow(row);
+    if (!data.address || confirm("Delete delivery?\n\n" + data.address)) {
+        fdel.formNode.removeChild(row);
         fdel.doChange();
     }
 };
@@ -95,10 +137,10 @@ fdel.doChange = function (node) {
  * Set up once the document finishes loading.
  */
 window.onload = function () {
-    fdel.form_node = document.getElementById("deliveries");
+    fdel.formNode = document.getElementById("deliveries");
 
     // Add change handler to all form inputs
-    var fields = fdel.form_node.getElementsByTagName("input");
+    var fields = fdel.formNode.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
         if (fields[i].type == "number") {
             fields[i].onchange = fdel.doChange;

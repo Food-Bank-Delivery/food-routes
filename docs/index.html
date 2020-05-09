@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Food delivery routes</title>
+    <title>Food-delivery route</title>
     <link rel="stylesheet" href="style.css"/>
     <link rel="icon" href="icon.png"/>
     <meta charset="utf-8"/>
@@ -9,7 +9,8 @@
     <script src="script.js" defer="defer"></script>
   </head>
   <body>
-    <h1>Food delivery routes</h1>
+    <h1>Food-delivery route</h1>
+    <p><a target="_blank" href="">Start new route</a></p>
     <form id="deliveries">
       <fieldset>
         <label class="field field-quantity">
@@ -25,8 +26,6 @@
           <input name="notes" placeholder="Delivery notes"/>
         </label>
         <button class="delete-row" onclick="fdel.removeRow(this);">X</button>
-        <field type="hidden" name="lat"/>
-        <field type="hidden" name="lon"/>
       </fieldset>
     </form>
     <button class="add-row" onclick="fdel.addRow()" type="submit">+</button>
