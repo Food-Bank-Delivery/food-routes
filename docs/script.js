@@ -3,6 +3,8 @@
  */
 fdel = {
     formNode: undefined,
+    map: undefined,
+    markerLayer: undefined,
     rowTemplate: undefined,
     geoCache: {},
     data: []
@@ -10,10 +12,33 @@ fdel = {
 
 
 /**
+ * Set up the Leaflet map with OSM tiles and a marker group
+ */
+fdel.setupMap = function () {
+    fdel.map = L.map('map-node').setView([45.42, -75.69], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+    }).addTo(fdel.map);
+    fdel.markerLayer = L.featureGroup();
+    fdel.markerLayer.addTo(fdel.map);
+    fdel.updateMap();
+};
+
+
+
+/**
  * Geocode an address for mapping (assumes Ottawa).
  * Call func with the lat, lon on success
  */
 fdel.geocode = function (address, func, err) {
+
+    // be nice and cache
+    if (address in fdel.geoCache) {
+        var a = fdel.geoCache[address];
+        func(a[0], a[1]);
+    }
+    
     var query = "https://nominatim.openstreetmap.org/search?format=json&country=Canada&city=Ottawa&street=" + encodeURIComponent(address);
     var request = new XMLHttpRequest();
     if (!func) {
@@ -26,14 +51,19 @@ fdel.geocode = function (address, func, err) {
         if (request.readyState == XMLHttpRequest.DONE) {
             var geodata = JSON.parse(request.responseText);
             if (geodata.length > 0) {
-                func(geodata[0].lat, geodata[0].lon);
+                latlon = [geodata[0].lat, geodata[0].lon];
+                fullAddress = geodata[0].display_name;
+                fdel.geoCache[address] = [latlon, fullAddress];
+                func(latlon, fullAddress);
             } else {
+                fdel.geoCache[address] = false;
                 err("Cannot find address.\n\n" + address);
             }
         }
     };
     request.onerror = function () {
         err("API error in Nominatim geocoder.\n\n" + address);
+        fdel.geoCache[address] = false;
     };
     request.open("GET", query);
     request.send();
@@ -63,6 +93,23 @@ fdel.rescanData = function () {
         data.push(fdel.scanRow(rows[i]));
     }
     fdel.data = data;
+};
+
+
+/**
+ * Redraw the map with all current addresses.
+ */
+fdel.updateMap = function () {
+    fdel.markerLayer.clearLayers();
+    fdel.data.forEach(function (delivery) {
+        if (delivery.address) {
+            fdel.geocode(delivery.address, function (latlon, fullAddress) {
+                var marker = L.marker(latlon, { title: fullAddress });
+                marker.addTo(fdel.markerLayer);
+            });
+        }
+    });
+    fdel.map.fitBounds(fdel.markerLayer.getBounds());
 };
 
 
@@ -128,6 +175,8 @@ fdel.doChange = function (node) {
             notes: ""
         }];
         fdel.rebuildForm();
+    } else {
+        fdel.updateMap();
     }
     window.location.hash = JSON.stringify(fdel.data);
 };
@@ -157,4 +206,7 @@ window.onload = function () {
         fdel.data = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
         fdel.rebuildForm();
     }
+
+    // Set up map
+    fdel.setupMap();
 };

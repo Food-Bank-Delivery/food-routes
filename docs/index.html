@@ -3,31 +3,44 @@
   <head>
     <title>Food-delivery route</title>
     <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+          crossorigin=""/>
     <link rel="icon" href="icon.png"/>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <script src="script.js" defer="defer"></script>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+            crossorigin=""></script>    
   </head>
   <body>
     <h1>Food-delivery route</h1>
     <p><a target="_blank" href="">Start new route</a></p>
-    <form id="deliveries">
-      <fieldset>
-        <label class="field field-quantity">
-          <span># boxes</span>
-          <input name="quantity" type="number" value="1" min="1" max="25"/>
-        </label>
-        <label class="field field-address required">
-          <span>Address</span>
-          <input name="address" placeholder="Street address" required="required"/>
-        </label>
-        <label class="field field-notes">
-          <span>Notes</span>
-          <input name="notes" placeholder="Delivery notes"/>
-        </label>
-        <button class="delete-row" onclick="fdel.removeRow(this);">X</button>
-      </fieldset>
-    </form>
-    <button class="add-row" onclick="fdel.addRow()" type="submit">+</button>
+    <section id="data">
+      <h2>Delivery addresses</h2>
+      <form id="deliveries">
+        <fieldset>
+          <label class="field field-quantity">
+            <span># boxes</span>
+            <input name="quantity" type="number" value="1" min="1" max="25"/>
+          </label>
+          <label class="field field-address required">
+            <span>Address</span>
+            <input name="address" placeholder="Street address" required="required"/>
+          </label>
+          <label class="field field-notes">
+            <span>Notes</span>
+            <input name="notes" placeholder="Delivery notes"/>
+          </label>
+          <button class="delete-row" onclick="fdel.removeRow(this);">X</button>
+        </fieldset>
+      </form>
+      <button class="add-row" onclick="fdel.addRow()" type="submit">+</button>
+    </section>
+    <section id="map">
+      <h2>Delivery locations</h2>
+      <div id="map-node"/>
+    </section>
   </body>
 </html>
