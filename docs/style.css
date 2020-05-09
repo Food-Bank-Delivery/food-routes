@@ -1,0 +1,47 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    border-radius: 1ex;
+    padding: 0;
+}
+
+.field {
+    margin: 1ex 1em;
+}
+
+.field-quantity {
+    flex-grow: 0;
+    display: flex;
+}
+
+.field span {
+    width: 4em;
+}
+
+.field-quantity input {
+    width: 3em;
+}
+
+.field-address {
+    flex-grow: 2;
+    display: flex;
+}
+
+.field-address input {
+    flex-grow: 2;
+}
+
+.field-notes {
+    flex-grow: 2;
+    display: flex;
+}
+
+.field-notes input {
+    flex-grow: 2;
+}
+
+
