@@ -125,7 +125,7 @@ fdel.updateMap = function () {
                 });
             };
 
-            setTimeout(add, 1100);
+            setTimeout(add, 1500 * i);
         }
     });
 };
