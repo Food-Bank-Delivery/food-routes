@@ -120,8 +120,7 @@ fdel.updateMap = function () {
                         var icon = new L.AwesomeNumberMarkers({"number": i+1});
                         var marker = L.marker(latlon, { title: fullAddress, icon: icon });
                         marker.addTo(fdel.markerLayer);
-                        var bounds = fdel.markerLayer.getBounds();
-                        fdel.map.fitBounds(bounds.pad(0.25));
+                        fdel.recenterMap();
                     }
                 });
             };
@@ -129,6 +128,11 @@ fdel.updateMap = function () {
             setTimeout(add, 1100);
         }
     });
+};
+
+fdel.recenterMap = function () {
+    var bounds = fdel.markerLayer.getBounds();
+    fdel.map.fitBounds(bounds.pad(0.25));
 };
 
 

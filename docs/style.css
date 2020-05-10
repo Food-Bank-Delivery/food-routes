@@ -1,12 +1,18 @@
 body {
     font-family: Arial, sans-serif;
+    overflow-x: hidden;
+    padding: 0 2%;
+    margin: 0;
+    font-size: 10pt;
 }
 
 fieldset {
     display: flex;
     flex-wrap: wrap;
     border-radius: 1ex;
-    padding: 0;
+    margin: 1ex 0;
+    width: 620px;
+    max-width: 90%;
 }
 
 .field {
@@ -48,11 +54,14 @@ fieldset {
 #map-node {
     height: 480px;
     width: 640px;
+    max-width: 96%;
 }
 
 table {
     margin: 2ex 0;
     border-collapse: collapse;
+    width: 640px;
+    max-width: 96%;
 }
 
 th, td {

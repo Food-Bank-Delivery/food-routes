@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Route</title>
+    <title>Delivery route</title>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
           integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
@@ -17,7 +17,7 @@
     <script src="js/leaflet.numberMarkers/leaflet_awesome_number_markers.js"></script>
   </head>
   <body>
-    <h1>Route</h1>
+    <h1>Delivery route</h1>
     <table id="route">
       <thead>
         <tr>
@@ -32,7 +32,10 @@
       </tbody>
     </table>
     <section id="map">
-      <div id="map-node"/>
+      <div id="map-node"></div>
+      <p>
+        <a href="javascript:fdel.recenterMap()">Recentre map</a>
+      </p>
     </section>
     <script defer="defer">
       window.onload = fdel.setupRoute;
