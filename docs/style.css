@@ -4,7 +4,7 @@ body {
     padding: 0;
     margin: 0 1vw;
     width: 98vw;
-    max-width: 640px;
+    max-width: 1024px;
 }
 
 fieldset {
@@ -29,6 +29,11 @@ label span {
 
 label input, label select {
     flex-grow: 1;
+}
+
+.field-date input {
+    max-width: 10em;
+    margin-right: 1em;
 }
 
 #stops fieldset {

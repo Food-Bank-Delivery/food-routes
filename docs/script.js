@@ -1,7 +1,11 @@
+////////////////////////////////////////////////////////////////////////
+// Script to support the food-routes app
+////////////////////////////////////////////////////////////////////////
+
 /**
  * Top level namespace
  */
-fdel = {
+froutes = {
     map: undefined,
     markerLayer: undefined,
     geoCache: {},
@@ -12,7 +16,7 @@ fdel = {
         time: "09:00",
         entries: []
     },
-    locations: {
+    locations: { // TODO: move this to a separate file for easier maintenance
         crcrr: {
             name: "Rideau-Rockcliffe Community Resource Centre",
             address: "815 St Laurent Blvd"
@@ -27,35 +31,44 @@ fdel = {
 
 /**
  * Set up the Leaflet map with OSM tiles and a marker group
+ *
+ * One-time setup; use froutes.updateMap() to redraw
  */
-fdel.setupMap = function () {
-    fdel.map = L.map('map-node').setView([45.42, -75.69], 13);
-    L.control.scale().addTo(fdel.map);
+froutes.setupMap = function () {
+    froutes.map = L.map('map-node').setView([45.42, -75.69], 13);
+    L.control.scale().addTo(froutes.map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    }).addTo(fdel.map);
-    fdel.markerLayer = L.featureGroup();
-    fdel.markerLayer.addTo(fdel.map);
-    fdel.updateMap();
+    }).addTo(froutes.map);
+    froutes.markerLayer = L.featureGroup();
+    froutes.markerLayer.addTo(froutes.map);
+    froutes.updateMap();
 };
 
 
 
 /**
- * Geocode an address for mapping (assumes Ottawa).
- * Call func with the lat, lon on success
+ * Geocode an address for mapping (assumes Ottawa, for now).
+ *
+ * Calls the provided func with the [lat, lon] and full address string
+ * on success, e.g.
+ *
+ * func(latlon, fullAddress)
  */
-fdel.geocode = function (address, func, err) {
+froutes.geocode = function (address, func, err) {
 
-    // be nice and cache
-    if (address in fdel.geoCache) {
-        var a = fdel.geoCache[address];
+    // be nice to the Nominatim geocoder and cache
+    if (address in froutes.geoCache) {
+        var a = froutes.geoCache[address];
         func(a[0], a[1]);
         return;
     }
-    
+
+    // construct the geocoding query string
     var query = "https://nominatim.openstreetmap.org/search?format=json&country=Canada&city=Ottawa&street=" + encodeURIComponent(address);
+
+    // asynchronous request
     var request = new XMLHttpRequest();
     if (!func) {
         func = console.log;
@@ -64,24 +77,29 @@ fdel.geocode = function (address, func, err) {
         err = console.error;
     }
 
-    request.onreadystatechange = function () {
+    // result handler
+    request.onreadystatechange = () => {
         if (request.readyState == XMLHttpRequest.DONE) {
             var geodata = JSON.parse(request.responseText);
             if (geodata.length > 0) {
                 latlon = [geodata[0].lat, geodata[0].lon];
                 fullAddress = geodata[0].display_name;
-                fdel.geoCache[address] = [latlon, fullAddress];
+                froutes.geoCache[address] = [latlon, fullAddress];
                 func(latlon, fullAddress);
             } else {
-                fdel.geoCache[address] = false;
+                froutes.geoCache[address] = false;
                 func(false, false);
             }
         }
     };
-    request.onerror = function () {
+
+    // error handler
+    request.onerror = () => {
         err("API error in Nominatim geocoder.\n\n" + address);
-        fdel.geoCache[address] = false;
+        froutes.geoCache[address] = false;
     };
+
+    // OK, we're all set up, set the geocoding request to Nominatim
     request.open("GET", query);
     request.send();
 };
@@ -90,7 +108,7 @@ fdel.geocode = function (address, func, err) {
 /**
  * Scan a single fieldset (data row)
  */
-fdel.scanRow = function (node) {
+froutes.scanRow = function (node) {
     var entry = {};
     var fields = node.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
@@ -105,28 +123,28 @@ fdel.scanRow = function (node) {
 
 
 /**
- * Scan whole form and update fdel.data.entries
+ * Scan whole form and update froutes.data.entries
  */
-fdel.rescanData = function () {
+froutes.rescanData = function () {
 
-    fdel.data.route = fdel.formNode.route.value;
-    fdel.data.pickup = fdel.formNode.pickup.value;
-    fdel.data.date = fdel.formNode.date.value;
-    fdel.data.time = fdel.formNode.time.value;
+    froutes.data.route = froutes.formNode.route.value;
+    froutes.data.pickup = froutes.formNode.pickup.value;
+    froutes.data.date = froutes.formNode.date.value;
+    froutes.data.time = froutes.formNode.time.value;
 
-    var rows = fdel.stopsNode.getElementsByTagName("fieldset");
+    var rows = froutes.stopsNode.getElementsByTagName("fieldset");
     var data = [];
     for (var i = 0; i < rows.length; i++) {
-        data.push(fdel.scanRow(rows[i]));
+        data.push(froutes.scanRow(rows[i]));
     }
-    fdel.data.entries = data;
+    froutes.data.entries = data;
 };
 
 
 /**
  * Redraw the map with all current addresses.
  */
-fdel.updateMap = function () {
+froutes.updateMap = function () {
 
     function esc (text) {
         var node = document.createElement("span");
@@ -135,7 +153,7 @@ fdel.updateMap = function () {
     }
 
     function add (address, num, name) {
-        fdel.geocode(address, (latlon, fullAddress) => {
+        froutes.geocode(address, (latlon, fullAddress) => {
             if (latlon === false) {
                 alert("Cannot find address " + address);
             } else {
@@ -152,39 +170,39 @@ fdel.updateMap = function () {
                 marker.bindPopup(
                     (name ? "<b>" + esc(name) + "</b><br/><br/>" : "") + esc(fullAddress)
                 );
-                marker.addTo(fdel.markerLayer);
-                fdel.recenterMap();
+                marker.addTo(froutes.markerLayer);
+                froutes.recenterMap();
             }
         });
     };
 
-    var pickup = fdel.locations[fdel.data.pickup];
+    var pickup = froutes.locations[froutes.data.pickup];
 
-    fdel.markerLayer.clearLayers();
+    froutes.markerLayer.clearLayers();
 
     setTimeout(() => add(pickup.address, "*", pickup.name), 1500);
 
-    fdel.data.entries.forEach((entry, i) => {
+    froutes.data.entries.forEach((entry, i) => {
         if (entry.address) {
             setTimeout(() => add(entry.address, i + 1), 1500 * (i + 2));
         }
     });
 };
 
-fdel.recenterMap = function () {
-    var bounds = fdel.markerLayer.getBounds();
-    fdel.map.fitBounds(bounds.pad(0.25));
+froutes.recenterMap = function () {
+    var bounds = froutes.markerLayer.getBounds();
+    froutes.map.fitBounds(bounds.pad(0.25));
 };
 
 
 /**
- * Rebuild the form from fdel.data.entries (e.g. after a reload)
+ * Rebuild the form from froutes.data.entries (e.g. after a reload)
  */
-fdel.rebuildForm = function () {
-    fdel.stopsNode.innerHTML = "";
+froutes.rebuildForm = function () {
+    froutes.stopsNode.innerHTML = "";
 
-    if (fdel.data.entries.length == 0) {
-        fdel.data.entries = [
+    if (froutes.data.entries.length == 0) {
+        froutes.data.entries = [
             {
                 "quantity": 1,
                 "address": "",
@@ -193,50 +211,50 @@ fdel.rebuildForm = function () {
         ];
     }
 
-    fdel.data.entries.forEach((entry, i) => {
-        var row = fdel.rowTemplate.cloneNode(true);
+    froutes.data.entries.forEach((entry, i) => {
+        var row = froutes.rowTemplate.cloneNode(true);
         var fields = row.getElementsByTagName("input");
         for (var j = 0; j < fields.length; j++) {
             fields[j].value = entry[fields[j].name];
         }
-        fdel.stopsNode.appendChild(row);
+        froutes.stopsNode.appendChild(row);
     });
 
-    fdel.formNode.route.value = fdel.data.route;
-    fdel.formNode.pickup.value = fdel.data.pickup;
-    fdel.formNode.date.value = fdel.data.date;
-    fdel.formNode.time.value = fdel.data.time;
+    froutes.formNode.route.value = froutes.data.route;
+    froutes.formNode.pickup.value = froutes.data.pickup;
+    froutes.formNode.date.value = froutes.data.date;
+    froutes.formNode.time.value = froutes.data.time;
 };
 
 
 /**
  * Add a new delivery row to the form
  */
-fdel.addRow = function () {
-    var row = fdel.rowTemplate.cloneNode(true);
+froutes.addRow = function () {
+    var row = froutes.rowTemplate.cloneNode(true);
     var fields = row.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
         if (fields[i].type == "number") {
             fields[i].value = "1";
-            fields[i].addEventListener("change", fdel.doChange);
+            fields[i].addEventListener("change", froutes.doChange);
         } else {
             fields[i].value = "";
-            fields[i].addEventListener("change", fdel.doChange);
+            fields[i].addEventListener("change", froutes.doChange);
         }
     }
-    fdel.stopsNode.appendChild(row);
+    froutes.stopsNode.appendChild(row);
 };
 
 
 /**
  * Remove a delivery row from the form
  */
-fdel.removeRow = function (node) {
+froutes.removeRow = function (node) {
     var row = node.closest("fieldset");
-    var data = fdel.scanRow(row);
+    var data = froutes.scanRow(row);
     if (!data.address || confirm("Delete delivery?\n\n" + data.address)) {
-        fdel.stopsNode.removeChild(row);
-        fdel.doChange();
+        froutes.stopsNode.removeChild(row);
+        froutes.doChange();
     }
 };
 
@@ -244,7 +262,7 @@ fdel.removeRow = function (node) {
 /**
  * Draw a static display of the route in route.html
  */
-fdel.displayRoute = function () {
+froutes.displayRoute = function () {
 
     function set (id, value) {
         var node = document.getElementById(id);
@@ -255,11 +273,11 @@ fdel.displayRoute = function () {
         }
     }
 
-    if (fdel.data.route) {
-        var routeName = fdel.data.route;
+    if (froutes.data.route) {
+        var routeName = froutes.data.route;
         document.getElementsByTagName("h1")[0].textContent = routeName;
-        if (fdel.data.date) {
-            routeName += " (" + fdel.data.date + ")";
+        if (froutes.data.date) {
+            routeName += " (" + froutes.data.date + ")";
         }
         document.title = routeName;
     }
@@ -267,7 +285,7 @@ fdel.displayRoute = function () {
     var totalBoxes = 0;
     var totalStops = 0;
     
-    fdel.data.entries.forEach((entry, i) => {
+    froutes.data.entries.forEach((entry, i) => {
         var rowNode = document.createElement("tr");
         var cellNode;
 
@@ -295,11 +313,11 @@ fdel.displayRoute = function () {
             cellNode.textContent = entry.notes;
             rowNode.appendChild(cellNode);
 
-            fdel.routeNode.appendChild(rowNode);
+            froutes.routeNode.appendChild(rowNode);
         }
     });
 
-    var location = fdel.locations[fdel.data.pickup];
+    var location = froutes.locations[froutes.data.pickup];
 
     set("v.quantity", totalBoxes);
     if (totalBoxes != 1) {
@@ -307,85 +325,104 @@ fdel.displayRoute = function () {
     }
     set("v.facility", location.name);
     set("v.address", location.address);
-    set("v.date", new Date(fdel.data.date).toDateString());
-    set("v.time", fdel.data.time);
+    set("v.date", new Date(froutes.data.date).toDateString());
+    set("v.time", froutes.data.time);
 };
 
 
 /**
  * Update data whenever the user leaves a form field.
  */
-fdel.doChange = function (node) {
-    fdel.rescanData();
-    if (fdel.data.entries.length == 0) {
-        fdel.data.entries = [{
+froutes.doChange = function (node) {
+    froutes.rescanData();
+    if (froutes.data.entries.length == 0) {
+        froutes.data.entries = [{
             quantity: 1,
             address: "",
             notes: ""
         }];
-        fdel.rebuildForm();
+        froutes.rebuildForm();
     } else {
-        fdel.updateMap();
+        froutes.updateMap();
     }
-    window.location.hash = JSON.stringify(fdel.data);
-    fdel.linkNode.setAttribute("href", "route.html" + window.location.hash);
+    window.location.hash = JSON.stringify(froutes.data);
+    froutes.linkNode.setAttribute("href", "route.html" + window.location.hash);
     return true;
 };
 
 
-fdel.setupCommon = function () {
-    // Check for saved data in the URL
-    if (window.location.hash) {
-        fdel.data = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
-    }
-};
+
+////////////////////////////////////////////////////////////////////////
+// Post-load setup functions (called by pages
+////////////////////////////////////////////////////////////////////////
 
 /**
- * Set up once the document finishes loading.
+ * Setup the edit.html page (called by the page after load)
  */
-fdel.setupEdit = function () {
-    fdel.formNode = document.getElementById("deliveries");
-    fdel.formNode.addEventListener("submit", fdel.doChange);
+froutes.setupEdit = function () {
+    froutes.formNode = document.getElementById("deliveries");
+    froutes.formNode.addEventListener("submit", froutes.doChange);
 
-    fdel.stopsNode = document.getElementById("stops");
+    froutes.stopsNode = document.getElementById("stops");
 
-    fdel.linkNode = document.getElementById("share");
-    fdel.linkNode.setAttribute("href", "route.html" + window.location.hash);
+    froutes.linkNode = document.getElementById("share");
+    froutes.linkNode.setAttribute("href", "route.html" + window.location.hash);
 
-    var sel = fdel.formNode.pickup;
-    for (key in fdel.locations) {
-        var location = fdel.locations[key];
+    var sel = froutes.formNode.pickup;
+    for (key in froutes.locations) {
+        var location = froutes.locations[key];
         var node = document.createElement("option");
         node.textContent = location.name;
         node.value = key;
     }
 
     // Add change handler to all form inputs
-    var fields = fdel.formNode.getElementsByTagName("input");
+    var fields = froutes.formNode.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
         if (fields[i].type == "number") {
-            fields[i].addEventListener("change", fdel.doChange);
+            fields[i].addEventListener("change", froutes.doChange);
         } else {
-            fields[i].addEventListener("change", fdel.doChange);
+            fields[i].addEventListener("change", froutes.doChange);
         }
     }
 
     // Grab a template for a row (delivery)
-    fdel.rowTemplate = document.getElementById("stops").getElementsByTagName("fieldset")[0].cloneNode(true);
+    froutes.rowTemplate = document.getElementById("stops").getElementsByTagName("fieldset")[0].cloneNode(true);
 
-    fdel.setupCommon();
-    fdel.rebuildForm();
-    fdel.setupMap();
+    froutes.setupCommon();
+    froutes.rebuildForm();
+    froutes.setupMap();
 };
 
 
-fdel.setupRoute = function () {
-    fdel.setupCommon();
-    fdel.routeNode = document.getElementById("route-node");
-    fdel.stopsNode = document.getElementById("total-stops");
-    fdel.boxesNode = document.getElementById("total-boxes");
-    fdel.displayRoute();
-    fdel.setupMap();
+/**
+ * Setup the route.html page (called by the page after load)
+ */
+froutes.setupRoute = function () {
+    froutes.setupCommon();
+    froutes.routeNode = document.getElementById("route-node");
+    froutes.stopsNode = document.getElementById("total-stops");
+    froutes.boxesNode = document.getElementById("total-boxes");
+    froutes.displayRoute();
+    froutes.setupMap();
 };
 
 
+/**
+ * Common setup for all pages.
+ */
+froutes.setupCommon = function () {
+    // Check for saved data in the URL
+    if (window.location.hash) {
+        var data = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
+        // keep default values if they're missing from the URL hash
+        for (key in data) {
+            if (data[key]) {
+                froutes.data[key] = data[key];
+            }
+        }
+    }
+};
+
+
+// end

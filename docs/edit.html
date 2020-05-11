@@ -27,51 +27,51 @@
         <fieldset>
           <label class="required">
             <span>Route</span>
-            <input onchange="fdel.doChange();" name="route" required="required"/>
+            <input onchange="froutes.doChange();" name="route" required="required"/>
           </label>
           <label class="field field-pickup required">
             <span>Pickup</span>
-            <select onchange="fdel.doChange();" name="pickup" required="required">
+            <select onchange="froutes.doChange();" name="pickup" required="required">
               <option value="crcrr">Rideau-Rockcliffe</option>
               <option value="cscvanier">Partage Vanier</option>
             </select>
           </label>
           <label class="field field-date required">
             <span>Date</span>
-            <input onchange="fdel.doChange();" name="date" type="date" required="required"/>
+            <input onchange="froutes.doChange();" name="date" type="date" required="required"/>
             <span>Time</span>
-            <input onchange="fdel.doChange();" name="time" type="time" value="09:00" required="required"/>
+            <input onchange="froutes.doChange();" name="time" type="time" value="09:00" required="required"/>
           </label>
         </fieldset>
         <div id="stops">
           <fieldset>
             <label class="field field-quantity required">
               <span># boxes</span>
-              <input onchange="fdel.doChange();" name="quantity" type="number" value="1" min="1" max="25"/>
+              <input onchange="froutes.doChange();" name="quantity" type="number" value="1" min="1" max="25"/>
             </label>
             <label class="field field-address required">
               <span>Address</span>
-              <input onchange="fdel.doChange();" name="address" placeholder="Street address" required="required"/>
+              <input onchange="froutes.doChange();" name="address" placeholder="Street address" required="required"/>
             </label>
             <label class="field field-notes">
               <span>Notes</span>
-              <input onchange="fdel.doChange();" name="notes" placeholder="Delivery notes"/>
+              <input onchange="froutes.doChange();" name="notes" placeholder="Delivery notes"/>
             </label>
-            <button class="delete-row" type="button" onclick="fdel.removeRow(this);">X</button>
+            <button class="delete-row" type="button" onclick="froutes.removeRow(this);" title="Remove delivery">-</button>
           </fieldset>
         </div>
       </form>
-      <button class="add-row" onclick="fdel.addRow()" type="submit">+</button>
+      <button class="add-row" onclick="froutes.addRow()" type="submit" title="New delivery">+</button>
     </section>
     <section id="map">
       <h2>Delivery locations</h2>
       <div id="map-node"></div>
       <p>
-        <a href="javascript:fdel.recenterMap()">Recentre map</a>
+        <a href="javascript:froutes.recenterMap()">Recentre map</a>
       </p>
     </section>
     <script>
-      window.onload = fdel.setupEdit;
+      window.onload = froutes.setupEdit;
     </script>
   </body>
 </html>
