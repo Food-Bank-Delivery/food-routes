@@ -6,6 +6,10 @@ fdel = {
     markerLayer: undefined,
     geoCache: {},
     data: {
+        route: "Food-bank delivery",
+        pickup: "crcrr",
+        date: new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toLocaleDateString("iso"),
+        time: "09:00",
         entries: []
     },
     locations: {
@@ -100,8 +104,9 @@ fdel.scanRow = function (node) {
 fdel.rescanData = function () {
 
     fdel.data.route = fdel.formNode.route.value;
-    fdel.data.date = fdel.formNode.date.value;
     fdel.data.pickup = fdel.formNode.pickup.value;
+    fdel.data.date = fdel.formNode.date.value;
+    fdel.data.time = fdel.formNode.date.time;
 
     var rows = fdel.stopsNode.getElementsByTagName("fieldset");
     var data = [];
@@ -172,8 +177,9 @@ fdel.rebuildForm = function () {
     });
 
     fdel.formNode.route.value = fdel.data.route;
-    fdel.formNode.date.value = fdel.data.date;
     fdel.formNode.pickup.value = fdel.data.pickup;
+    fdel.formNode.date.value = fdel.data.date;
+    fdel.formNode.time.value = fdel.data.time;
 };
 
 

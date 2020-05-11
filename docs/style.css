@@ -108,8 +108,7 @@ button.add-row {
 table {
     margin: 2ex 0;
     border-collapse: collapse;
-    width: 640px;
-    max-width: 96%;
+    width: 100%;
 }
 
 th, td {

@@ -29,16 +29,18 @@
             <span>Route</span>
             <input onchange="fdel.doChange();" name="route" required="required"/>
           </label>
-          <label class="field field-date required">
-            <span>Date</span>
-            <input onchange="fdel.doChange();" name="date" type="date" required="required"/>
-          </label>
           <label class="field field-pickup required">
             <span>Pickup</span>
             <select  onchange="fdel.doChange();" name="pickup" required="required">
               <option value="crcrr">Rideau-Rockcliffe</option>
               <option value="cscvanier">Partage Vanier</option>
             </select>
+          </label>
+          <label class="field field-date required">
+            <span>Date</span>
+            <input onchange="fdel.doChange();" name="date" type="date" required="required"/>
+            <span>Time</span>
+            <input onchange="fdel.doChange();" name="time" type="time" value="09:00" required="required"/>
           </label>
         </fieldset>
         <div id="stops">
