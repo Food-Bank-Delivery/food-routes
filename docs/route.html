@@ -18,14 +18,18 @@
   </head>
   <body>
     <h1>Delivery route</h1>
+    <p id="pickup">
+      Pick up <span id="v.quantity"></span> box<span
+      id="v.plural"></span> at <strong><span id="v.facility"></span></strong> (<span
+      id="v.address"></span>) on <strong><span id="v.date"></span></strong>.
+    </p>
     <table id="route">
       <thead>
         <tr>
           <th>#</th>
           <th>Address</th>
           <th>Boxes</th>
-          <th>Notes</th>
-          <th>Delivered?</th>
+          <th>Delivery notes</th>
         </tr>
       </thead>
       <tbody id="route-node">

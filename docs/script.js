@@ -2,14 +2,15 @@
  * Top level namespace
  */
 fdel = {
-    formNode: undefined,
-    linkNode: undefined,
     map: undefined,
     markerLayer: undefined,
-    rowTemplate: undefined,
     geoCache: {},
     data: {
         entries: []
+    },
+    locations: {
+        crcrr: ["Rideau-Rockcliffe Community Resource Centre", "815 St Laurent Blvd"],
+        cscvanier: ["Partage Vanier Food Bank", "290 Dupuis St."]
     }
 };
 
@@ -83,7 +84,11 @@ fdel.scanRow = function (node) {
     var entry = {};
     var fields = node.getElementsByTagName("input");
     for (var i = 0; i < fields.length; i++) {
-        entry[fields[i].name] = fields[i].value;
+        if (fields[i].type == "number") {
+            entry[fields[i].name] = Number(fields[i].value);
+        } else {
+            entry[fields[i].name] = fields[i].value;
+        }
     }
     return entry;
 };
@@ -93,7 +98,12 @@ fdel.scanRow = function (node) {
  * Scan whole form and update fdel.data.entries
  */
 fdel.rescanData = function () {
-    var rows = fdel.formNode.getElementsByTagName("fieldset");
+
+    fdel.data.route = fdel.formNode.route.value;
+    fdel.data.date = fdel.formNode.date.value;
+    fdel.data.pickup = fdel.formNode.pickup.value;
+
+    var rows = fdel.stopsNode.getElementsByTagName("fieldset");
     var data = [];
     for (var i = 0; i < rows.length; i++) {
         data.push(fdel.scanRow(rows[i]));
@@ -140,7 +150,7 @@ fdel.recenterMap = function () {
  * Rebuild the form from fdel.data.entries (e.g. after a reload)
  */
 fdel.rebuildForm = function () {
-    fdel.formNode.innerHTML = "";
+    fdel.stopsNode.innerHTML = "";
 
     if (fdel.data.entries.length == 0) {
         fdel.data.entries = [
@@ -158,8 +168,12 @@ fdel.rebuildForm = function () {
         for (var j = 0; j < fields.length; j++) {
             fields[j].value = entry[fields[j].name];
         }
-        fdel.formNode.appendChild(row);
+        fdel.stopsNode.appendChild(row);
     });
+
+    fdel.formNode.route.value = fdel.data.route;
+    fdel.formNode.date.value = fdel.data.date;
+    fdel.formNode.pickup.value = fdel.data.pickup;
 };
 
 
@@ -178,7 +192,7 @@ fdel.addRow = function () {
             fields[i].addEventListener("change", fdel.doChange);
         }
     }
-    fdel.formNode.appendChild(row);
+    fdel.stopsNode.appendChild(row);
 };
 
 
@@ -189,22 +203,49 @@ fdel.removeRow = function (node) {
     var row = node.closest("fieldset");
     var data = fdel.scanRow(row);
     if (!data.address || confirm("Delete delivery?\n\n" + data.address)) {
-        fdel.formNode.removeChild(row);
+        fdel.stopsNode.removeChild(row);
         fdel.doChange();
     }
 };
 
+
+/**
+ * Draw a static display of the route in route.html
+ */
 fdel.displayRoute = function () {
 
-    if (fdel.data.entries.length == 0) {
-        fdel.routeNode.textContent = "No delivery addresses defined!";
+    function set (id, value) {
+        var node = document.getElementById(id);
+        if (node) {
+            node.textContent = value;
+        } else {
+            console.error("No element with id", id);
+        }
     }
+
+    if (fdel.data.route) {
+        var routeName = fdel.data.route;
+        document.getElementsByTagName("h1")[0].textContent = routeName;
+        if (fdel.data.date) {
+            routeName += " (" + fdel.data.date + ")";
+        }
+        document.title = routeName;
+    }
+
+    var totalBoxes = 0;
+    var totalStops = 0;
     
     fdel.data.entries.forEach((entry, i) => {
         var rowNode = document.createElement("tr");
         var cellNode;
 
         if (entry.address) {
+
+            console.log(entry);
+
+            totalBoxes += Number(entry.quantity);
+            totalStops++;
+            
             cellNode = document.createElement("th");
             cellNode.className = "num";
             cellNode.textContent = "" + (i + 1)
@@ -224,12 +265,20 @@ fdel.displayRoute = function () {
             cellNode.textContent = entry.notes;
             rowNode.appendChild(cellNode);
 
-            cellNode = document.createElement("td");
-            rowNode.appendChild(cellNode);
-            
             fdel.routeNode.appendChild(rowNode);
         }
     });
+
+    var location = fdel.locations[fdel.data.pickup];
+
+    set("v.quantity", totalBoxes);
+    if (totalBoxes != 1) {
+        set("v.plural", "es");
+    }
+    set("v.facility", location[0]);
+    set("v.address", location[1]);
+    set("v.date",new Date(fdel.data.date).toDateString());
+
 };
 
 
@@ -268,6 +317,8 @@ fdel.setupEdit = function () {
     fdel.formNode = document.getElementById("deliveries");
     fdel.formNode.addEventListener("submit", fdel.doChange);
 
+    fdel.stopsNode = document.getElementById("stops");
+
     fdel.linkNode = document.getElementById("share");
     fdel.linkNode.setAttribute("href", "route.html" + window.location.hash);
 
@@ -282,7 +333,7 @@ fdel.setupEdit = function () {
     }
 
     // Grab a template for a row (delivery)
-    fdel.rowTemplate = document.getElementsByTagName("fieldset")[0].cloneNode(true);
+    fdel.rowTemplate = document.getElementById("stops").getElementsByTagName("fieldset")[0].cloneNode(true);
 
     fdel.setupCommon();
     fdel.rebuildForm();
@@ -293,6 +344,8 @@ fdel.setupEdit = function () {
 fdel.setupRoute = function () {
     fdel.setupCommon();
     fdel.routeNode = document.getElementById("route-node");
+    fdel.stopsNode = document.getElementById("total-stops");
+    fdel.boxesNode = document.getElementById("total-boxes");
     fdel.displayRoute();
     fdel.setupMap();
 };

@@ -4,57 +4,105 @@ body {
     padding: 0 2%;
     margin: 0;
     font-size: 10pt;
+    width: 640px;
 }
 
 fieldset {
+    border: 0;
+    padding: 0;
+}
+
+label {
+    display: flex;
+    align-items: center;
+    margin: 1ex 0;
+}
+
+label.required span {
+    font-weight: bold;
+}
+
+label span {
+    display: inline-block;
+    width: 4.5em;
+}
+
+label input, label select {
+    flex-grow: 1;
+}
+
+#stops fieldset {
     display: flex;
     flex-wrap: wrap;
     border-radius: 1ex;
+    align-items: center;
     margin: 1ex 0;
-    width: 620px;
-    max-width: 90%;
+    border: 1px solid;
+    padding: .5ex;
 }
 
-.field {
+#stops .field {
     margin: 1ex 1em;
 }
 
-.field-quantity {
+#stops .field-quantity {
     flex-grow: 0;
     display: flex;
 }
 
-.field span {
-    width: 4em;
-}
-
-.field-quantity input {
+#stops .field-quantity input {
     width: 3em;
 }
 
-.field-address {
+#stops .field-address {
     flex-grow: 2;
     display: flex;
 }
 
-.field-address input {
+#stops .field-address input {
     flex-grow: 2;
 }
 
-.field-notes {
+#stops .field-notes {
     flex-grow: 2;
     display: flex;
 }
 
-.field-notes input {
+#stops .field-notes input {
     flex-grow: 2;
 }
 
+button.delete-row {
+    background: #ff8888;
+    height: 50%;
+    vertical-align: middle;
+}
+
+button.add-row {
+    background: #88ff88;
+    height: 50%;
+}
+
+#summary {
+    display: flex;
+    justify-content: space-between;
+}
+
+#summary dt {
+    flex-grow: 0;
+    font-weight: bold;
+}
+
+#summary dt:after {
+    content: ": ";
+}
+
+#summary dd {
+    flex-grow: 1;
+}
 
 #map-node {
     height: 480px;
-    width: 640px;
-    max-width: 96%;
 }
 
 table {
