@@ -307,8 +307,8 @@ fdel.displayRoute = function () {
     }
     set("v.facility", location.name);
     set("v.address", location.address);
-    set("v.date",new Date(fdel.data.date).toDateString());
-
+    set("v.date", new Date(fdel.data.date).toDateString());
+    set("v.time", fdel.data.time);
 };
 
 
