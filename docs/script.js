@@ -13,8 +13,14 @@ fdel = {
         entries: []
     },
     locations: {
-        crcrr: ["Rideau-Rockcliffe Community Resource Centre", "815 St Laurent Blvd"],
-        cscvanier: ["Partage Vanier Food Bank", "290 Dupuis St."]
+        crcrr: {
+            name: "Rideau-Rockcliffe Community Resource Centre",
+            address: "815 St Laurent Blvd"
+        },
+        cscvanier: {
+            name: "Partage Vanier Food Bank",
+            address: "290 Dupuis St."
+        }
     }
 };
 
@@ -122,25 +128,45 @@ fdel.rescanData = function () {
  */
 fdel.updateMap = function () {
 
+    function esc (text) {
+        var node = document.createElement("span");
+        node.textContent = text;
+        return node.innerHTML;
+    }
+
+    function add (address, num, name) {
+        fdel.geocode(address, (latlon, fullAddress) => {
+            if (latlon === false) {
+                alert("Cannot find address " + address);
+            } else {
+                var icon;
+                if (num == "*") {
+                    // This is the food bank; use Unicode package character
+                    var icon = new L.AwesomeNumberMarkers({number: "\u{1F4E6}", markerColor: "green"});
+                } else {
+                    // Use a number
+                    var icon = new L.AwesomeNumberMarkers({number: num});
+                }
+                var title = (name ? name + "\n" : "") + address;
+                var marker = L.marker(latlon, { title: title, icon: icon });
+                marker.bindPopup(
+                    (name ? "<b>" + esc(name) + "</b><br/><br/>" : "") + esc(fullAddress)
+                );
+                marker.addTo(fdel.markerLayer);
+                fdel.recenterMap();
+            }
+        });
+    };
+
+    var pickup = fdel.locations[fdel.data.pickup];
+
     fdel.markerLayer.clearLayers();
 
-    var counter = 0;
+    setTimeout(() => add(pickup.address, "*", pickup.name), 1500);
+
     fdel.data.entries.forEach((entry, i) => {
         if (entry.address) {
-            var add = () => {
-                fdel.geocode(entry.address, (latlon, fullAddress) => {
-                    if (latlon === false) {
-                        alert("Cannot find address " + entry.address);
-                    } else {
-                        var icon = new L.AwesomeNumberMarkers({"number": i+1});
-                        var marker = L.marker(latlon, { title: fullAddress, icon: icon });
-                        marker.addTo(fdel.markerLayer);
-                        fdel.recenterMap();
-                    }
-                });
-            };
-
-            setTimeout(add, 1500 * i);
+            setTimeout(() => add(entry.address, i + 1), 1500 * (i + 2));
         }
     });
 };
@@ -247,8 +273,6 @@ fdel.displayRoute = function () {
 
         if (entry.address) {
 
-            console.log(entry);
-
             totalBoxes += Number(entry.quantity);
             totalStops++;
             
@@ -281,8 +305,8 @@ fdel.displayRoute = function () {
     if (totalBoxes != 1) {
         set("v.plural", "es");
     }
-    set("v.facility", location[0]);
-    set("v.address", location[1]);
+    set("v.facility", location.name);
+    set("v.address", location.address);
     set("v.date",new Date(fdel.data.date).toDateString());
 
 };
@@ -327,6 +351,14 @@ fdel.setupEdit = function () {
 
     fdel.linkNode = document.getElementById("share");
     fdel.linkNode.setAttribute("href", "route.html" + window.location.hash);
+
+    var sel = fdel.formNode.pickup;
+    for (key in fdel.locations) {
+        var location = fdel.locations[key];
+        var node = document.createElement("option");
+        node.textContent = location.name;
+        node.value = key;
+    }
 
     // Add change handler to all form inputs
     var fields = fdel.formNode.getElementsByTagName("input");
