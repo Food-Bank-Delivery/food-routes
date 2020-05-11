@@ -112,7 +112,7 @@ fdel.rescanData = function () {
     fdel.data.route = fdel.formNode.route.value;
     fdel.data.pickup = fdel.formNode.pickup.value;
     fdel.data.date = fdel.formNode.date.value;
-    fdel.data.time = fdel.formNode.date.time;
+    fdel.data.time = fdel.formNode.time.value;
 
     var rows = fdel.stopsNode.getElementsByTagName("fieldset");
     var data = [];
