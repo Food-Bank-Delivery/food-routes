@@ -341,6 +341,7 @@ froutes.doChange = function (node) {
     }
     window.location.hash = JSON.stringify(froutes.data);
     froutes.linkNode.setAttribute("href", "route.html" + window.location.hash);
+    froutes.updateEmail();
     return true;
 };
 
@@ -374,6 +375,49 @@ froutes.removeRow = function (node) {
         froutes.doChange();
     }
 };
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Utility methods for page setup.
+////////////////////////////////////////////////////////////////////////
+
+froutes.updateEmail = function() {
+
+    var node = document.getElementById("mailto");
+    if (!node) {
+        console.warn("No #mailto link found");
+        return;
+    }
+    
+    var subject =  froutes.data.route + " (" + froutes.data.date + ")";
+    var body = "";
+    var dateString = new Date(froutes.data.date).toDateString();
+    var location = froutes.locations[froutes.data.pickup];
+    var url = 
+
+    body += "Thank you for agreeing to deliver food for Ottawa's food banks. Here is your delivery route for " + dateString + ".\n\n";
+    body += "Pickup location:  " + location.name + ", " + location.address + "\n\n";
+    body += "Pickup time:  " + froutes.data.time + ", " + dateString + "\n\n";
+    body += "Deliveries:\n\n";
+
+    froutes.data.entries.forEach((entry, i) => {
+        body += "  " + (i + 1) + ". " + entry.address + " (" + entry.quantity + (entry.quantity == 1 ? " box" : " boxes") + ")";
+        if (entry.notes) {
+            body += " -- " + entry.notes;
+        }
+        body += "\n\n";
+    });
+
+    body += "Interactive map: " + window.location.href.replace("/edit.html", "/route.html") + "\n\n\n";
+
+    body += "Sincerely, the Volunteer Coordinator\n";
+
+    url = "mailto:?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+    
+    node.setAttribute("href", url);
+};
+
 
 
 
@@ -447,6 +491,7 @@ froutes.setupCommon = function () {
             }
         }
     }
+    froutes.updateEmail();
 };
 
 

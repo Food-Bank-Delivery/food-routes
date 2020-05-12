@@ -5,6 +5,27 @@ body {
     margin: 0 1vw;
     width: 98vw;
     max-width: 1024px;
+    color: #333333;
+}
+
+h1 {
+    font-size: 200%;
+    line-height: 2rem;
+}
+
+nav {
+    float: right;
+    width: 9rem;
+    display: flex;
+    justify-content: space-around;
+    line-height: 2rem;
+}
+
+nav a {
+    font-size: 120%;
+    border-radius: .5ex;
+    text-decoration: none;
+    color: #3333ff;
 }
 
 fieldset {
