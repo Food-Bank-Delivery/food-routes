@@ -390,7 +390,7 @@ froutes.updateEmail = function() {
         return;
     }
     
-    var subject =  froutes.data.route + " (" + froutes.data.date + ")";
+    var subject =  "[Ottawa food banks] " + froutes.data.route + " (" + froutes.data.date + ")";
     var body = "";
     var dateString = new Date(froutes.data.date).toDateString();
     var location = froutes.locations[froutes.data.pickup];
