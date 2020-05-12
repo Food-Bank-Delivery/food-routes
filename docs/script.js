@@ -2,8 +2,9 @@
 // Script to support the food-routes app
 ////////////////////////////////////////////////////////////////////////
 
+
 /**
- * Top level namespace
+ * Top level namespace object
  */
 froutes = {
     map: undefined,
@@ -29,6 +30,11 @@ froutes = {
 };
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Mapping support (all Leaflet dependencies here)
+////////////////////////////////////////////////////////////////////////
+
 /**
  * Set up the Leaflet map with OSM tiles and a marker group
  *
@@ -47,6 +53,65 @@ froutes.setupMap = function () {
 };
 
 
+/**
+ * Redraw the map with all current addresses.
+ */
+froutes.updateMap = function () {
+
+    function esc (text) {
+        var node = document.createElement("span");
+        node.textContent = text;
+        return node.innerHTML;
+    }
+
+    function add (address, num, name) {
+        froutes.geocode(address, (latlon, fullAddress) => {
+            if (latlon === false) {
+                alert("Cannot find address " + address);
+            } else {
+                var icon;
+                if (num == "*") {
+                    // This is the food bank; use Unicode package character
+                    var icon = new L.AwesomeNumberMarkers({number: "\u{1F4E6}", markerColor: "green"});
+                } else {
+                    // Use a number
+                    var icon = new L.AwesomeNumberMarkers({number: num});
+                }
+                var title = (name ? name + "\n" : "") + address;
+                var marker = L.marker(latlon, { title: title, icon: icon });
+                marker.bindPopup(
+                    (name ? "<b>" + esc(name) + "</b><br/><br/>" : "") + esc(fullAddress)
+                );
+                marker.addTo(froutes.markerLayer);
+                froutes.recenterMap();
+            }
+        });
+    };
+
+    var pickup = froutes.locations[froutes.data.pickup];
+
+    froutes.markerLayer.clearLayers();
+
+    setTimeout(() => add(pickup.address, "*", pickup.name), 1500);
+
+    froutes.data.entries.forEach((entry, i) => {
+        if (entry.address) {
+            setTimeout(() => add(entry.address, i + 1), 1500 * (i + 2));
+        }
+    });
+};
+
+froutes.recenterMap = function () {
+    var bounds = froutes.markerLayer.getBounds();
+    froutes.map.fitBounds(bounds.pad(0.25));
+};
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+// Geocoding
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Geocode an address for mapping (assumes Ottawa, for now).
@@ -105,6 +170,11 @@ froutes.geocode = function (address, func, err) {
 };
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Dynamic DOM management for edit.html
+////////////////////////////////////////////////////////////////////////
+
 /**
  * Scan a single fieldset (data row)
  */
@@ -142,60 +212,6 @@ froutes.rescanData = function () {
 
 
 /**
- * Redraw the map with all current addresses.
- */
-froutes.updateMap = function () {
-
-    function esc (text) {
-        var node = document.createElement("span");
-        node.textContent = text;
-        return node.innerHTML;
-    }
-
-    function add (address, num, name) {
-        froutes.geocode(address, (latlon, fullAddress) => {
-            if (latlon === false) {
-                alert("Cannot find address " + address);
-            } else {
-                var icon;
-                if (num == "*") {
-                    // This is the food bank; use Unicode package character
-                    var icon = new L.AwesomeNumberMarkers({number: "\u{1F4E6}", markerColor: "green"});
-                } else {
-                    // Use a number
-                    var icon = new L.AwesomeNumberMarkers({number: num});
-                }
-                var title = (name ? name + "\n" : "") + address;
-                var marker = L.marker(latlon, { title: title, icon: icon });
-                marker.bindPopup(
-                    (name ? "<b>" + esc(name) + "</b><br/><br/>" : "") + esc(fullAddress)
-                );
-                marker.addTo(froutes.markerLayer);
-                froutes.recenterMap();
-            }
-        });
-    };
-
-    var pickup = froutes.locations[froutes.data.pickup];
-
-    froutes.markerLayer.clearLayers();
-
-    setTimeout(() => add(pickup.address, "*", pickup.name), 1500);
-
-    froutes.data.entries.forEach((entry, i) => {
-        if (entry.address) {
-            setTimeout(() => add(entry.address, i + 1), 1500 * (i + 2));
-        }
-    });
-};
-
-froutes.recenterMap = function () {
-    var bounds = froutes.markerLayer.getBounds();
-    froutes.map.fitBounds(bounds.pad(0.25));
-};
-
-
-/**
  * Rebuild the form from froutes.data.entries (e.g. after a reload)
  */
 froutes.rebuildForm = function () {
@@ -227,37 +243,10 @@ froutes.rebuildForm = function () {
 };
 
 
-/**
- * Add a new delivery row to the form
- */
-froutes.addRow = function () {
-    var row = froutes.rowTemplate.cloneNode(true);
-    var fields = row.getElementsByTagName("input");
-    for (var i = 0; i < fields.length; i++) {
-        if (fields[i].type == "number") {
-            fields[i].value = "1";
-            fields[i].addEventListener("change", froutes.doChange);
-        } else {
-            fields[i].value = "";
-            fields[i].addEventListener("change", froutes.doChange);
-        }
-    }
-    froutes.stopsNode.appendChild(row);
-};
-
-
-/**
- * Remove a delivery row from the form
- */
-froutes.removeRow = function (node) {
-    var row = node.closest("fieldset");
-    var data = froutes.scanRow(row);
-    if (!data.address || confirm("Delete delivery?\n\n" + data.address)) {
-        froutes.stopsNode.removeChild(row);
-        froutes.doChange();
-    }
-};
-
+
+////////////////////////////////////////////////////////////////////////
+// Static web-page drawing for route.html
+////////////////////////////////////////////////////////////////////////
 
 /**
  * Draw a static display of the route in route.html
@@ -330,6 +319,11 @@ froutes.displayRoute = function () {
 };
 
 
+
+////////////////////////////////////////////////////////////////////////
+// Event handlers
+////////////////////////////////////////////////////////////////////////
+
 /**
  * Update data whenever the user leaves a form field.
  */
@@ -350,10 +344,41 @@ froutes.doChange = function (node) {
     return true;
 };
 
+/**
+ * Add a new delivery row to the form
+ */
+froutes.addRow = function () {
+    var row = froutes.rowTemplate.cloneNode(true);
+    var fields = row.getElementsByTagName("input");
+    for (var i = 0; i < fields.length; i++) {
+        if (fields[i].type == "number") {
+            fields[i].value = "1";
+            fields[i].addEventListener("change", froutes.doChange);
+        } else {
+            fields[i].value = "";
+            fields[i].addEventListener("change", froutes.doChange);
+        }
+    }
+    froutes.stopsNode.appendChild(row);
+};
+
+
+/**
+ * Remove a delivery row from the form
+ */
+froutes.removeRow = function (node) {
+    var row = node.closest("fieldset");
+    var data = froutes.scanRow(row);
+    if (!data.address || confirm("Delete delivery?\n\n" + data.address)) {
+        froutes.stopsNode.removeChild(row);
+        froutes.doChange();
+    }
+};
+
 
 
 ////////////////////////////////////////////////////////////////////////
-// Post-load setup functions (called by pages
+// Post-load setup functions (called by pages)
 ////////////////////////////////////////////////////////////////////////
 
 /**
